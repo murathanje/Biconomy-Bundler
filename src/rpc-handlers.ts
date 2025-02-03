@@ -1,26 +1,39 @@
-import { ENTRY_POINT_ADDRESS } from './config';
-import { sendHandleOps } from './ethereum';
+import { sendHandleOps } from './services/TransactionService';
+import { UserOperation } from './types/UserOperation';
+import { validateUserOperation } from './utils/validation';
+import { ENTRY_POINT_ADDRESS } from './config/constants';
+import { RPCError, RPC_ERRORS } from './types/ErrorTypes';
 
-const MAX_ALLOWED_GAS = 10_000_000;
+type RawUserOperation = Omit<UserOperation, 'callGasLimit' | 'verificationGasLimit' | 'preVerificationGas' | 'maxFeePerGas' | 'maxPriorityFeePerGas'> & {
+    callGasLimit: string;
+    verificationGasLimit: string;
+    preVerificationGas: string;
+    maxFeePerGas: string;
+    maxPriorityFeePerGas: string;
+};
 
-export async function handleEthSendUserOperation(params: any[]): Promise<string> {
-    const [userOp, entryPoint] = params;
-
-    if (entryPoint.toLowerCase() !== ENTRY_POINT_ADDRESS.toLowerCase()) {
-        throw new Error('Unsupported EntryPoint address');
+export async function handleEthSendUserOperation(params: [RawUserOperation]): Promise<string> {
+    const [rawUserOp] = params;
+    
+    try {
+        const userOp: UserOperation = {
+            ...rawUserOp,
+            callGasLimit: BigInt(rawUserOp.callGasLimit),
+            verificationGasLimit: BigInt(rawUserOp.verificationGasLimit),
+            preVerificationGas: BigInt(rawUserOp.preVerificationGas),
+            maxFeePerGas: BigInt(rawUserOp.maxFeePerGas),
+            maxPriorityFeePerGas: BigInt(rawUserOp.maxPriorityFeePerGas)
+        };
+        
+        validateUserOperation(userOp, ENTRY_POINT_ADDRESS);
+        return sendHandleOps(userOp);
+    } catch (error) {
+        if (error instanceof Error) {
+            throw new RPCError(
+                RPC_ERRORS.INVALID_PARAMS.code,
+                error.message
+            );
+        }
+        throw error;
     }
-
-    if (userOp.paymasterAndData !== '0x') {
-        throw new Error('Paymaster not supported');
-    }
-
-    const totalGas = BigInt(userOp.callGasLimit) +
-        (BigInt(userOp.verificationGasLimit) * 3n) +
-        BigInt(userOp.preVerificationGas);
-
-    if (totalGas > MAX_ALLOWED_GAS) {
-        throw new Error('Gas limit exceeds maximum allowed');
-    }
-
-    return sendHandleOps(userOp);
 }

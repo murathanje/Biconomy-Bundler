@@ -1,44 +1,30 @@
-# ERC-4337 Bundler Node
+# ERC-4337 Minimal Bundler
 
-A minimal bundler node implementation that handles ERC-4337 UserOperations on Ethereum Sepolia testnet. This bundler node accepts UserOperations, executes them through the EntryPoint contract, and returns transaction hashes.
+A minimal implementation of an ERC-4337 bundler node that accepts and executes UserOperations on the Sepolia testnet. This implementation focuses on reliability, error handling, and proper EOA management.
 
-## Overview
+## Features
 
-This is a take-home assignment implementation of a minimal ERC-4337 bundler node with the following key characteristics:
-
-- Stateless architecture (no database/persistent storage)
-- Implements only the `eth_sendUserOperation` JSON-RPC API
-- Executes UserOperations directly through the EntryPoint contract
-- Manages multiple EOA accounts for transaction sending
-- Built with TypeScript, Express.js, and viem.sh
-- Supports Ethereum Sepolia testnet
-
-## Key Features
-
-- **Single API Implementation**: Only implements `eth_sendUserOperation` as per requirements
-- **Multiple EOA Management**: Uses at least two EOAs for transaction sending to prevent nonce conflicts
-- **Smart Transaction Management**: 
-  - Handles stuck/failed transactions
-  - Implements cooldown periods
-  - Manages nonce tracking
-  - Provides transaction retry logic
-- **Comprehensive Error Handling**: Implements standard JSON-RPC 2.0 error codes
-- **No UserOp Mempool**: Direct execution of UserOperations without mempool implementation
-- **No Paymaster Support**: Requires smart accounts to have native tokens for gas
+- Single JSON-RPC endpoint (`eth_sendUserOperation`)
+- Multiple EOA account management with automatic rotation
+- Intelligent transaction retry mechanism
+- Comprehensive error handling and validation
+- Transaction status tracking
+- Gas estimation and optimization
+- No paymaster support (simplified implementation)
 
 ## Prerequisites
 
-- Node.js (v16 or higher)
-- npm or yarn
-- Sepolia testnet RPC URL (e.g., from Alchemy or Infura)
-- At least two funded EOA accounts on Sepolia
+- Node.js v16 or higher
+- Yarn or npm
+- Two EOA accounts with Sepolia ETH for gas fees
+- Access to Sepolia RPC endpoint
 
 ## Installation
 
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd bundler
+cd erc4337-bundler
 ```
 
 2. Install dependencies:
@@ -46,136 +32,149 @@ cd bundler
 npm install
 ```
 
-3. Create a `.env` file:
-```env
-# Sepolia RPC URL
-RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY
-
-# EOA Private Keys (minimum 2 required)
-EOA1_PK=your_private_key_1
-EOA2_PK=your_private_key_2
-
-# Port (optional, defaults to 3001)
-PORT=3001
+3. Configure environment variables:
+```bash
+cp .env.example .env
 ```
 
-## EntryPoint Contract
+Edit `.env` file with your configuration:
+```env
+# Server Configuration
+PORT=3001
 
-The bundler works with the official ERC-4337 EntryPoint contract on Sepolia:
-- Address: `0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789`
-- [View on Polygonscan](https://polygonscan.com/address/0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789)
+# Network Configuration
+SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY
 
-## Running the Bundler
+# EntryPoint Contract
+ENTRY_POINT_ADDRESS=0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789
 
-Start the bundler:
+# EOA Private Keys (Do not use these in production!)
+EOA1_PK=your_private_key_1_here
+EOA2_PK=your_private_key_2_here
+```
+
+## Usage
+
+1. Start the server:
 ```bash
 npm start
 ```
-The service will be available at `http://localhost:3001` (or your configured PORT).
 
-## API Usage
-
-### eth_sendUserOperation
-
-Send a UserOperation for execution:
-
+2. Send UserOperation:
 ```bash
 curl -X POST http://localhost:3001 \
--H "Content-Type: application/json" \
--d '{
-  "jsonrpc": "2.0",
-  "method": "eth_sendUserOperation",
-  "params": [
-    {
-      "sender": "0x...",
-      "nonce": "0x...",
-      "initCode": "0x",
-      "callData": "0x...",
-      "accountGasLimits": "0x...",
-      "preVerificationGas": "0x...",
-      "gasFees": "0x...",
-      "paymasterAndData": "0x",
-      "signature": "0x..."
-    },
-    "0x5ff137d4b0fdcd49dca30c7cf57e578a026d2789"
-  ],
-  "id": 1
-}'
-```
-
-### Health Check
-
-```bash
-curl http://localhost:3001/health
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "eth_sendUserOperation",
+    "params": [
+      {
+        "sender": "0x...",
+        "nonce": "0x...",
+        "initCode": "0x",
+        "callData": "0x...",
+        "callGasLimit": "0x...",
+        "verificationGasLimit": "0x...",
+        "preVerificationGas": "0x...",
+        "maxFeePerGas": "0x...",
+        "maxPriorityFeePerGas": "0x...",
+        "paymasterAndData": "0x",
+        "signature": "0x..."
+      },
+      "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
+    ]
+  }'
 ```
 
 ## Testing
 
-1. Fund your test accounts with Sepolia ETH:
-   - [Alchemy Sepolia Faucet](https://www.alchemy.com/faucets/ethereum-sepolia)
-   - [Infura Sepolia Faucet](https://www.infura.io/faucet/sepolia)
-
-2. Run tests:
+Run the test suite:
 ```bash
+# Run all tests
 npm test
+
+# Run with coverage
+npm run test:coverage
+
+# Run in watch mode
+npm run test:watch
 ```
 
-## Generating Test UserOperations
+### Test Coverage
+- WalletManager: EOA management, transaction tracking, balance checks
+- TransactionService: UserOperation validation, gas estimation, transaction sending
+- Error handling and recovery scenarios
 
-Use the [Biconomy SDK Examples](https://github.com/bcnmy/sdk-examples) repository:
+## Error Handling
 
-1. Clone and setup:
-```bash
-git clone https://github.com/bcnmy/sdk-examples.git
-cd sdk-examples
-npm install
+The bundler implements comprehensive error handling with specific error codes:
+
+- Standard JSON-RPC Errors (-32000 to -32099)
+- EntryPoint Related Errors (-32100 to -32199)
+- Bundler Related Errors (-32200 to -32299)
+- Security Related Errors (-32300 to -32399)
+
+Example error response:
+```json
+{
+    "jsonrpc": "2.0",
+    "error": {
+        "code": -32201,
+        "message": "Insufficient wallet balance",
+        "data": {
+            "balance": "1000000000000",
+            "minimum": "10000000000000"
+        }
+    },
+    "id": null
+}
 ```
 
-2. Enable UserOp debug output:
-```bash
-export BICONOMY_SDK_DEBUG=true
-```
+## Troubleshooting
 
-3. Use example scripts like `scripts/gasless/nativeTransfer.ts` to generate test UserOperations.
+### Common Issues
+
+1. **Insufficient Balance**
+   - Ensure your EOA accounts have enough Sepolia ETH
+   - Default minimum balance: 0.01 ETH
+
+2. **Transaction Failures**
+   - Check gas parameters in UserOperation
+   - Verify signature is correct
+   - Ensure nonce is valid
+
+3. **No Available Wallet**
+   - Wait for cooldown period (default: 5 seconds)
+   - Check if wallets have too many pending transactions
+   - Verify wallet failure counts haven't exceeded maximum
+
+### Monitoring
+
+The bundler logs important events and errors to help with debugging:
+- Transaction success/failure
+- Wallet selection events
+- Balance checks
+- Gas estimations
 
 ## Architecture
 
-### Key Components
+### Components
 
-1. **WalletManager** (`src/ethereum.ts`)
+1. **WalletManager**
    - Manages multiple EOA accounts
-   - Handles transaction retries
-   - Implements cooldown periods
-   - Tracks nonce and pending transactions
+   - Handles transaction tracking
+   - Implements wallet selection strategy
 
-2. **RPC Handler** (`src/rpc-handlers.ts`)
-   - Validates UserOperation parameters
-   - Enforces gas limits
-   - Handles EntryPoint contract interactions
+2. **TransactionService**
+   - Processes UserOperations
+   - Handles gas estimation
+   - Manages transaction retries
 
-3. **Error Handler**
-   - Implements JSON-RPC 2.0 error codes
-   - Provides detailed error messages
-   - Handles blockchain-specific errors
-
-### Security Features
-
-- UserOperation validation
-- Gas limit enforcement
-- Multiple EOA management
-- Transaction retry logic
-- Nonce tracking
-- Cooldown periods
-
-## Limitations
-
-As per assignment requirements, this implementation:
-- Only supports `eth_sendUserOperation`
-- Does not implement UserOp mempool
-- Does not provide gas estimation endpoints
-- Does not support paymasters
-- Requires smart accounts to have native tokens for gas
-- Only supports Sepolia testnet
+3. **Validation**
+   - UserOperation validation
+   - Gas limit checks
+   - Security validations
 
 ## Contributing
 
@@ -183,8 +182,8 @@ As per assignment requirements, this implementation:
 2. Create your feature branch
 3. Commit your changes
 4. Push to the branch
-5. Create a new Pull Request
+5. Create a Pull Request
 
 ## License
 
-[MIT License](LICENSE) 
+MIT License 

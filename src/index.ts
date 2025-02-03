@@ -1,8 +1,14 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { sendHandleOps } from './ethereum';
-import { UserOperation } from './types';
+import { sendHandleOps } from './services/TransactionService';
+import { UserOperation } from './types/UserOperation';
+import { config } from 'dotenv';
+import { rpcLimiter, healthLimiter } from './middleware/rateLimiter';
+import { handleEthSendUserOperation } from './rpc-handlers';
+import { RPCError, RPC_ERRORS } from './types/ErrorTypes';
+
+config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -10,57 +16,53 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-app.get('/health', (req: express.Request, res: express.Response) => {
-    res.status(200).json({ status: 'healthy' });
+app.get('/health', healthLimiter, (req, res) => {
+    res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-app.post('/', async (req: express.Request, res: express.Response) => {
+app.post('/', rpcLimiter, async (req, res) => {
     try {
-        const { jsonrpc, method, params, id } = req.body;
+        const { method, params, id } = req.body;
 
-        if (jsonrpc !== '2.0' || method !== 'eth_sendUserOperation') {
-            return res.status(400).json({
-                jsonrpc: '2.0',
-                id,
-                error: {
-                    code: -32601,
-                    message: 'Method not found'
-                }
-            });
+        if (!method || !params || !id) {
+            throw new RPCError(
+                RPC_ERRORS.INVALID_REQUEST.code,
+                'Invalid JSON-RPC request'
+            );
         }
 
-        const [userOp] = params;
-        const hash = await sendHandleOps(userOp as UserOperation);
+        let result;
+        switch (method) {
+            case 'eth_sendUserOperation':
+                result = await handleEthSendUserOperation(params);
+                break;
+            default:
+                throw new RPCError(
+                    RPC_ERRORS.METHOD_NOT_FOUND.code,
+                    `Method ${method} not supported`
+                );
+        }
 
         res.json({
             jsonrpc: '2.0',
-            result: hash,
+            result,
             id
         });
-    } catch (error: any) {
-        if (error.code === -32603) {
-            console.error('Internal server error:', error);
+    } catch (error) {
+        if (error instanceof RPCError) {
+            res.status(400).json(error.toJSON());
+        } else {
+            const rpcError = new RPCError(
+                RPC_ERRORS.INTERNAL_ERROR.code,
+                'Internal server error'
+            );
+            res.status(500).json(rpcError.toJSON());
         }
-
-        if (error.toJSON) {
-            return res.json({
-                jsonrpc: '2.0',
-                ...error.toJSON(),
-                id: req.body.id
-            });
-        }
-
-        res.status(500).json({
-            jsonrpc: '2.0',
-            id: req.body.id,
-            error: {
-                code: -32603,
-                message: error.message || 'Internal server error'
-            }
-        });
     }
 });
 
 app.listen(PORT, () => {
     console.log(`Bundler running on port ${PORT}`);
 });
+
+export { sendHandleOps, UserOperation };
