@@ -24,7 +24,7 @@ A minimal implementation of an ERC-4337 bundler node that accepts and executes U
 1. Clone the repository:
 ```bash
 git clone https://github.com/murathanje/Biconomy-Bundler.git
-cd erc4337-bundler
+cd Biconomy-Bundler
 ```
 
 2. Install dependencies:
