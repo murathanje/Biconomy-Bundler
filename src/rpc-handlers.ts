@@ -1,4 +1,3 @@
-import { UserOperation } from './types';
 import { ENTRY_POINT_ADDRESS } from './config';
 import { sendHandleOps } from './ethereum';
 

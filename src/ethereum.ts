@@ -11,33 +11,15 @@ import {
 import { ENTRY_POINT_ABI, SMART_ACCOUNT_ABI } from './abi';
 import { Mutex } from 'async-mutex';
 import { UserOperation } from './types';
-import { ENTRY_POINT_ADDRESS, ANVIL_RPC_URL, CHAIN_ID } from './config';
+import { ENTRY_POINT_ADDRESS, SEPOLIA_RPC_URL } from './config';
 import { privateKeyToAccount } from 'viem/accounts';
 import { decodeFunctionData } from 'viem';
+import { sepolia } from 'viem/chains';
 
-const anvilChain = {
-    id: CHAIN_ID,
-    name: 'Anvil',
-    network: 'anvil',
-    nativeCurrency: {
-        decimals: 18,
-        name: 'Ether',
-        symbol: 'ETH',
-    },
-    rpcUrls: {
-        default: {
-            http: [ANVIL_RPC_URL],
-        },
-        public: {
-            http: [ANVIL_RPC_URL],
-        },
-    },
-} as const;
-
-const transport = http(ANVIL_RPC_URL) as unknown as Transport;
+const transport = http(SEPOLIA_RPC_URL);
 
 const publicClient = createPublicClient({
-    chain: anvilChain,
+    chain: sepolia,
     transport,
 });
 
@@ -130,7 +112,7 @@ class WalletManager {
             const account = privateKeyToAccount(pk as `0x${string}`);
             const wallet = createWalletClient({
                 account,
-                chain: anvilChain,
+                chain: sepolia,
                 transport,
             }) as CustomWalletClient;
             
@@ -289,7 +271,7 @@ export async function sendHandleOps(userOp: UserOperation): Promise<Hash> {
             const args: readonly [readonly EntryPointUserOp[], `0x${string}`] = [[formattedUserOp], wallet.account.address];
             
             const gasEstimate = await publicClient.estimateContractGas({
-                address: ENTRY_POINT_ADDRESS,
+                address: ENTRY_POINT_ADDRESS as `0x${string}`,
                 abi: ENTRY_POINT_ABI,
                 functionName: 'handleOps',
                 args,
@@ -299,7 +281,7 @@ export async function sendHandleOps(userOp: UserOperation): Promise<Hash> {
             const gasBuffer = BigInt(Math.floor(Number(gasEstimate) * 1.2));
 
             const hash = await wallet.writeContract({
-                address: ENTRY_POINT_ADDRESS,
+                address: ENTRY_POINT_ADDRESS as `0x${string}`,
                 abi: ENTRY_POINT_ABI,
                 functionName: 'handleOps',
                 args,

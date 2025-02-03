@@ -5,7 +5,7 @@ import { sendHandleOps } from './ethereum';
 import { UserOperation } from './types';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
@@ -29,7 +29,7 @@ app.post('/', async (req: express.Request, res: express.Response) => {
             });
         }
 
-        const [userOp, entryPoint] = params;
+        const [userOp] = params;
         const hash = await sendHandleOps(userOp as UserOperation);
 
         res.json({
