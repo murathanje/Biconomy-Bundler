@@ -5,6 +5,42 @@ export const ENTRY_POINT_ABI = [
     },
     {
         "type": "function",
+        "name": "SIG_VALIDATION_FAILED",
+        "inputs": [],
+        "outputs": [
+            {
+                "name": "",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
+        "name": "_validateSenderAndPaymaster",
+        "inputs": [
+            {
+                "name": "initCode",
+                "type": "bytes",
+                "internalType": "bytes"
+            },
+            {
+                "name": "sender",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "paymasterAndData",
+                "type": "bytes",
+                "internalType": "bytes"
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "view"
+    },
+    {
+        "type": "function",
         "name": "addStake",
         "inputs": [
             {
@@ -37,24 +73,6 @@ export const ENTRY_POINT_ABI = [
     },
     {
         "type": "function",
-        "name": "delegateAndRevert",
-        "inputs": [
-            {
-                "name": "target",
-                "type": "address",
-                "internalType": "address"
-            },
-            {
-                "name": "data",
-                "type": "bytes",
-                "internalType": "bytes"
-            }
-        ],
-        "outputs": [],
-        "stateMutability": "nonpayable"
-    },
-    {
-        "type": "function",
         "name": "depositTo",
         "inputs": [
             {
@@ -79,8 +97,8 @@ export const ENTRY_POINT_ABI = [
         "outputs": [
             {
                 "name": "deposit",
-                "type": "uint256",
-                "internalType": "uint256"
+                "type": "uint112",
+                "internalType": "uint112"
             },
             {
                 "name": "staked",
@@ -123,8 +141,8 @@ export const ENTRY_POINT_ABI = [
                 "components": [
                     {
                         "name": "deposit",
-                        "type": "uint256",
-                        "internalType": "uint256"
+                        "type": "uint112",
+                        "internalType": "uint112"
                     },
                     {
                         "name": "staked",
@@ -195,7 +213,7 @@ export const ENTRY_POINT_ABI = [
             {
                 "name": "userOp",
                 "type": "tuple",
-                "internalType": "struct PackedUserOperation",
+                "internalType": "struct UserOperation",
                 "components": [
                     {
                         "name": "sender",
@@ -218,9 +236,14 @@ export const ENTRY_POINT_ABI = [
                         "internalType": "bytes"
                     },
                     {
-                        "name": "accountGasLimits",
-                        "type": "bytes32",
-                        "internalType": "bytes32"
+                        "name": "callGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "verificationGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
                     },
                     {
                         "name": "preVerificationGas",
@@ -228,9 +251,14 @@ export const ENTRY_POINT_ABI = [
                         "internalType": "uint256"
                     },
                     {
-                        "name": "gasFees",
-                        "type": "bytes32",
-                        "internalType": "bytes32"
+                        "name": "maxFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "maxPriorityFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
                     },
                     {
                         "name": "paymasterAndData",
@@ -266,7 +294,7 @@ export const ENTRY_POINT_ABI = [
                     {
                         "name": "userOps",
                         "type": "tuple[]",
-                        "internalType": "struct PackedUserOperation[]",
+                        "internalType": "struct UserOperation[]",
                         "components": [
                             {
                                 "name": "sender",
@@ -289,9 +317,14 @@ export const ENTRY_POINT_ABI = [
                                 "internalType": "bytes"
                             },
                             {
-                                "name": "accountGasLimits",
-                                "type": "bytes32",
-                                "internalType": "bytes32"
+                                "name": "callGasLimit",
+                                "type": "uint256",
+                                "internalType": "uint256"
+                            },
+                            {
+                                "name": "verificationGasLimit",
+                                "type": "uint256",
+                                "internalType": "uint256"
                             },
                             {
                                 "name": "preVerificationGas",
@@ -299,9 +332,14 @@ export const ENTRY_POINT_ABI = [
                                 "internalType": "uint256"
                             },
                             {
-                                "name": "gasFees",
-                                "type": "bytes32",
-                                "internalType": "bytes32"
+                                "name": "maxFeePerGas",
+                                "type": "uint256",
+                                "internalType": "uint256"
+                            },
+                            {
+                                "name": "maxPriorityFeePerGas",
+                                "type": "uint256",
+                                "internalType": "uint256"
                             },
                             {
                                 "name": "paymasterAndData",
@@ -343,7 +381,7 @@ export const ENTRY_POINT_ABI = [
             {
                 "name": "ops",
                 "type": "tuple[]",
-                "internalType": "struct PackedUserOperation[]",
+                "internalType": "struct UserOperation[]",
                 "components": [
                     {
                         "name": "sender",
@@ -366,9 +404,14 @@ export const ENTRY_POINT_ABI = [
                         "internalType": "bytes"
                     },
                     {
-                        "name": "accountGasLimits",
-                        "type": "bytes32",
-                        "internalType": "bytes32"
+                        "name": "callGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "verificationGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
                     },
                     {
                         "name": "preVerificationGas",
@@ -376,9 +419,14 @@ export const ENTRY_POINT_ABI = [
                         "internalType": "uint256"
                     },
                     {
-                        "name": "gasFees",
-                        "type": "bytes32",
-                        "internalType": "bytes32"
+                        "name": "maxFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "maxPriorityFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
                     },
                     {
                         "name": "paymasterAndData",
@@ -444,22 +492,12 @@ export const ENTRY_POINT_ABI = [
                                 "internalType": "uint256"
                             },
                             {
-                                "name": "verificationGasLimit",
-                                "type": "uint256",
-                                "internalType": "uint256"
-                            },
-                            {
                                 "name": "callGasLimit",
                                 "type": "uint256",
                                 "internalType": "uint256"
                             },
                             {
-                                "name": "paymasterVerificationGasLimit",
-                                "type": "uint256",
-                                "internalType": "uint256"
-                            },
-                            {
-                                "name": "paymasterPostOpGasLimit",
+                                "name": "verificationGasLimit",
                                 "type": "uint256",
                                 "internalType": "uint256"
                             },
@@ -548,22 +586,153 @@ export const ENTRY_POINT_ABI = [
     },
     {
         "type": "function",
-        "name": "supportsInterface",
+        "name": "simulateHandleOp",
         "inputs": [
             {
-                "name": "interfaceId",
-                "type": "bytes4",
-                "internalType": "bytes4"
-            }
-        ],
-        "outputs": [
+                "name": "op",
+                "type": "tuple",
+                "internalType": "struct UserOperation",
+                "components": [
+                    {
+                        "name": "sender",
+                        "type": "address",
+                        "internalType": "address"
+                    },
+                    {
+                        "name": "nonce",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "initCode",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    },
+                    {
+                        "name": "callData",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    },
+                    {
+                        "name": "callGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "verificationGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "preVerificationGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "maxFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "maxPriorityFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "paymasterAndData",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    },
+                    {
+                        "name": "signature",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    }
+                ]
+            },
             {
-                "name": "",
-                "type": "bool",
-                "internalType": "bool"
+                "name": "target",
+                "type": "address",
+                "internalType": "address"
+            },
+            {
+                "name": "targetCallData",
+                "type": "bytes",
+                "internalType": "bytes"
             }
         ],
-        "stateMutability": "view"
+        "outputs": [],
+        "stateMutability": "nonpayable"
+    },
+    {
+        "type": "function",
+        "name": "simulateValidation",
+        "inputs": [
+            {
+                "name": "userOp",
+                "type": "tuple",
+                "internalType": "struct UserOperation",
+                "components": [
+                    {
+                        "name": "sender",
+                        "type": "address",
+                        "internalType": "address"
+                    },
+                    {
+                        "name": "nonce",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "initCode",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    },
+                    {
+                        "name": "callData",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    },
+                    {
+                        "name": "callGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "verificationGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "preVerificationGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "maxFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "maxPriorityFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "paymasterAndData",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    },
+                    {
+                        "name": "signature",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    }
+                ]
+            }
+        ],
+        "outputs": [],
+        "stateMutability": "nonpayable"
     },
     {
         "type": "function",
@@ -655,37 +824,6 @@ export const ENTRY_POINT_ABI = [
                 "type": "uint256",
                 "indexed": false,
                 "internalType": "uint256"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
-        "name": "PostOpRevertReason",
-        "inputs": [
-            {
-                "name": "userOpHash",
-                "type": "bytes32",
-                "indexed": true,
-                "internalType": "bytes32"
-            },
-            {
-                "name": "sender",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "nonce",
-                "type": "uint256",
-                "indexed": false,
-                "internalType": "uint256"
-            },
-            {
-                "name": "revertReason",
-                "type": "bytes",
-                "indexed": false,
-                "internalType": "bytes"
             }
         ],
         "anonymous": false
@@ -823,31 +961,6 @@ export const ENTRY_POINT_ABI = [
     },
     {
         "type": "event",
-        "name": "UserOperationPrefundTooLow",
-        "inputs": [
-            {
-                "name": "userOpHash",
-                "type": "bytes32",
-                "indexed": true,
-                "internalType": "bytes32"
-            },
-            {
-                "name": "sender",
-                "type": "address",
-                "indexed": true,
-                "internalType": "address"
-            },
-            {
-                "name": "nonce",
-                "type": "uint256",
-                "indexed": false,
-                "internalType": "uint256"
-            }
-        ],
-        "anonymous": false
-    },
-    {
-        "type": "event",
         "name": "UserOperationRevertReason",
         "inputs": [
             {
@@ -904,15 +1017,35 @@ export const ENTRY_POINT_ABI = [
     },
     {
         "type": "error",
-        "name": "DelegateAndRevert",
+        "name": "ExecutionResult",
         "inputs": [
             {
-                "name": "success",
+                "name": "preOpGas",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "paid",
+                "type": "uint256",
+                "internalType": "uint256"
+            },
+            {
+                "name": "validAfter",
+                "type": "uint48",
+                "internalType": "uint48"
+            },
+            {
+                "name": "validUntil",
+                "type": "uint48",
+                "internalType": "uint48"
+            },
+            {
+                "name": "targetSuccess",
                 "type": "bool",
                 "internalType": "bool"
             },
             {
-                "name": "ret",
+                "name": "targetResult",
                 "type": "bytes",
                 "internalType": "bytes"
             }
@@ -931,38 +1064,6 @@ export const ENTRY_POINT_ABI = [
                 "name": "reason",
                 "type": "string",
                 "internalType": "string"
-            }
-        ]
-    },
-    {
-        "type": "error",
-        "name": "FailedOpWithRevert",
-        "inputs": [
-            {
-                "name": "opIndex",
-                "type": "uint256",
-                "internalType": "uint256"
-            },
-            {
-                "name": "reason",
-                "type": "string",
-                "internalType": "string"
-            },
-            {
-                "name": "inner",
-                "type": "bytes",
-                "internalType": "bytes"
-            }
-        ]
-    },
-    {
-        "type": "error",
-        "name": "PostOpReverted",
-        "inputs": [
-            {
-                "name": "returnData",
-                "type": "bytes",
-                "internalType": "bytes"
             }
         ]
     },
@@ -990,6 +1091,223 @@ export const ENTRY_POINT_ABI = [
                 "name": "aggregator",
                 "type": "address",
                 "internalType": "address"
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ValidationResult",
+        "inputs": [
+            {
+                "name": "returnInfo",
+                "type": "tuple",
+                "internalType": "struct IEntryPoint.ReturnInfo",
+                "components": [
+                    {
+                        "name": "preOpGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "prefund",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "sigFailed",
+                        "type": "bool",
+                        "internalType": "bool"
+                    },
+                    {
+                        "name": "validAfter",
+                        "type": "uint48",
+                        "internalType": "uint48"
+                    },
+                    {
+                        "name": "validUntil",
+                        "type": "uint48",
+                        "internalType": "uint48"
+                    },
+                    {
+                        "name": "paymasterContext",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    }
+                ]
+            },
+            {
+                "name": "senderInfo",
+                "type": "tuple",
+                "internalType": "struct IStakeManager.StakeInfo",
+                "components": [
+                    {
+                        "name": "stake",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "unstakeDelaySec",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            },
+            {
+                "name": "factoryInfo",
+                "type": "tuple",
+                "internalType": "struct IStakeManager.StakeInfo",
+                "components": [
+                    {
+                        "name": "stake",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "unstakeDelaySec",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            },
+            {
+                "name": "paymasterInfo",
+                "type": "tuple",
+                "internalType": "struct IStakeManager.StakeInfo",
+                "components": [
+                    {
+                        "name": "stake",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "unstakeDelaySec",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "type": "error",
+        "name": "ValidationResultWithAggregation",
+        "inputs": [
+            {
+                "name": "returnInfo",
+                "type": "tuple",
+                "internalType": "struct IEntryPoint.ReturnInfo",
+                "components": [
+                    {
+                        "name": "preOpGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "prefund",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "sigFailed",
+                        "type": "bool",
+                        "internalType": "bool"
+                    },
+                    {
+                        "name": "validAfter",
+                        "type": "uint48",
+                        "internalType": "uint48"
+                    },
+                    {
+                        "name": "validUntil",
+                        "type": "uint48",
+                        "internalType": "uint48"
+                    },
+                    {
+                        "name": "paymasterContext",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                    }
+                ]
+            },
+            {
+                "name": "senderInfo",
+                "type": "tuple",
+                "internalType": "struct IStakeManager.StakeInfo",
+                "components": [
+                    {
+                        "name": "stake",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "unstakeDelaySec",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            },
+            {
+                "name": "factoryInfo",
+                "type": "tuple",
+                "internalType": "struct IStakeManager.StakeInfo",
+                "components": [
+                    {
+                        "name": "stake",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "unstakeDelaySec",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            },
+            {
+                "name": "paymasterInfo",
+                "type": "tuple",
+                "internalType": "struct IStakeManager.StakeInfo",
+                "components": [
+                    {
+                        "name": "stake",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "unstakeDelaySec",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    }
+                ]
+            },
+            {
+                "name": "aggregatorInfo",
+                "type": "tuple",
+                "internalType": "struct IEntryPoint.AggregatorStakeInfo",
+                "components": [
+                    {
+                        "name": "aggregator",
+                        "type": "address",
+                        "internalType": "address"
+                    },
+                    {
+                        "name": "stakeInfo",
+                        "type": "tuple",
+                        "internalType": "struct IStakeManager.StakeInfo",
+                        "components": [
+                            {
+                                "name": "stake",
+                                "type": "uint256",
+                                "internalType": "uint256"
+                            },
+                            {
+                                "name": "unstakeDelaySec",
+                                "type": "uint256",
+                                "internalType": "uint256"
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     }
@@ -1121,7 +1439,7 @@ export const SMART_ACCOUNT_ABI = [
             {
                 "name": "userOp",
                 "type": "tuple",
-                "internalType": "struct PackedUserOperation",
+                "internalType": "struct UserOperation",
                 "components": [
                     {
                         "name": "sender",
@@ -1144,9 +1462,14 @@ export const SMART_ACCOUNT_ABI = [
                         "internalType": "bytes"
                     },
                     {
-                        "name": "accountGasLimits",
-                        "type": "bytes32",
-                        "internalType": "bytes32"
+                        "name": "callGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "verificationGasLimit",
+                        "type": "uint256",
+                        "internalType": "uint256"
                     },
                     {
                         "name": "preVerificationGas",
@@ -1154,9 +1477,14 @@ export const SMART_ACCOUNT_ABI = [
                         "internalType": "uint256"
                     },
                     {
-                        "name": "gasFees",
-                        "type": "bytes32",
-                        "internalType": "bytes32"
+                        "name": "maxFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
+                    },
+                    {
+                        "name": "maxPriorityFeePerGas",
+                        "type": "uint256",
+                        "internalType": "uint256"
                     },
                     {
                         "name": "paymasterAndData",

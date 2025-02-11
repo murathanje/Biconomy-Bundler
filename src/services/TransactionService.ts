@@ -1,86 +1,82 @@
-import { Hash, decodeFunctionData } from 'viem';
-import { ENTRY_POINT_ADDRESS } from '../config/constants';
-import { MAX_ATTEMPTS } from '../config/transaction';
-import { ENTRY_POINT_ABI, SMART_ACCOUNT_ABI } from '../abi';
-import { UserOperation } from '../types/UserOperation';
-import { EntryPointUserOp } from '../types/EntryPointUserOp';
+import { Hash } from 'viem';
+import { ENTRY_POINT_ADDRESS } from '../config/environment';
+import { MAX_ATTEMPTS, MAX_FEE_PER_GAS, MAX_PRIORITY_FEE_PER_GAS } from '../config/constants';
+import { localChain } from '../config/chain';
+import { ENTRY_POINT_ABI } from '../abi';
+import { ProcessedUserOperation } from '../types/UserOperation';
 import { RPCError, RPC_ERRORS } from '../types/ErrorTypes';
-import { BANNED_ADDRESSES } from '../utils/validation';
-import { calculateGasWithBuffer } from '../utils/gas';
-import { formatUserOp } from '../utils/userOp';
 import { WalletManager } from './WalletManager';
-import { publicClient } from '../config/clients';
-import { sepolia } from 'viem/chains';
+import { EntryPointUserOp } from '../types/EntryPointUserOp';
 
-export async function sendHandleOps(userOp: UserOperation): Promise<Hash> {
-    const walletManager = WalletManager.getInstance();
-    let attempts = 0;
-    let lastError: Error | null = null;
+import { GasEstimationService } from './transaction/GasEstimationService';
+import { UserOperationValidator } from './transaction/UserOperationValidator';
+import { TransactionLogger } from './transaction/TransactionLogger';
+import { ErrorHandler } from './transaction/ErrorHandler';
 
-    while (attempts < MAX_ATTEMPTS) {
-        const wallet = await walletManager.selectWallet();
-        
-        try {
-            const decoded = decodeFunctionData({
-                abi: SMART_ACCOUNT_ABI,
-                data: userOp.callData as `0x${string}`
-            });
+export class TransactionService {
+    private static instance: TransactionService;
+    private readonly validator = new UserOperationValidator();
+    private readonly gasEstimator = new GasEstimationService();
+    private readonly logger = new TransactionLogger();
+    private readonly errorHandler = new ErrorHandler();
 
-            if (!decoded.args) {
-                throw new RPCError(
-                    RPC_ERRORS.INVALID_PARAMS.code,
-                    "Invalid callData: Could not decode function arguments"
-                );
-            }
-
-            const targetAddress = decoded.args[0] as string;
-            if (BANNED_ADDRESSES.has(targetAddress)) {
-                throw new RPCError(
-                    RPC_ERRORS.BANNED_ADDRESS.code,
-                    RPC_ERRORS.BANNED_ADDRESS.message,
-                    { address: targetAddress }
-                );
-            }
-
-            const formattedUserOp = formatUserOp(userOp);
-            const args: readonly [readonly EntryPointUserOp[], `0x${string}`] = [[formattedUserOp], wallet.account.address];
-            
-            const gasEstimate = await publicClient.estimateContractGas({
-                address: ENTRY_POINT_ADDRESS as `0x${string}`,
-                abi: ENTRY_POINT_ABI,
-                functionName: 'handleOps',
-                args,
-                account: wallet.account.address,
-            });
-
-            const hash = await wallet.writeContract({
-                address: ENTRY_POINT_ADDRESS as `0x${string}`,
-                abi: ENTRY_POINT_ABI,
-                functionName: 'handleOps',
-                args,
-                gas: calculateGasWithBuffer(gasEstimate),
-                chain: sepolia,
-                account: wallet.account.address
-            });
-
-            await walletManager.trackTransaction(hash, wallet.account.address);
-            return hash;
-        } catch (error: any) {
-            console.error(`Transaction failed:`, error);
-            attempts++;
-            lastError = error;
-            
-            if (attempts >= MAX_ATTEMPTS) {
-                throw new RPCError(
-                    RPC_ERRORS.MAX_RETRIES_EXCEEDED.code,
-                    `Failed after ${MAX_ATTEMPTS} attempts: ${error.message}`
-                );
-            }
+    public static getInstance(): TransactionService {
+        if (!TransactionService.instance) {
+            TransactionService.instance = new TransactionService();
         }
+        return TransactionService.instance;
     }
 
-    throw new RPCError(
-        RPC_ERRORS.MAX_RETRIES_EXCEEDED.code,
-        `Failed after ${MAX_ATTEMPTS} attempts: ${lastError?.message}`
-    );
-} 
+    public async sendHandleOps(userOp: ProcessedUserOperation): Promise<Hash> {
+        const walletManager = await WalletManager.getInstance();
+        let attempts = 0;
+
+        while (attempts < MAX_ATTEMPTS) {
+            const wallet = await walletManager.selectWallet();
+            
+            try {
+                const { formattedUserOp, targetAddress } = this.validator.validateAndFormat(userOp);
+                const gasLimit = await this.gasEstimator.estimateGasLimit(
+                    wallet,
+                    formattedUserOp,
+                    targetAddress
+                );
+
+                const hash = await this.sendTransaction(wallet, formattedUserOp, gasLimit);
+                await walletManager.trackTransaction(hash, wallet.account.address);
+                this.logger.logTransactionDetails(userOp, hash, wallet.account.address, targetAddress);
+
+                return hash;
+            } catch (error: any) {
+                console.error(`Transaction failed (attempt ${attempts + 1}/${MAX_ATTEMPTS}):`, error);
+                attempts++;
+                await this.errorHandler.handleTransactionError(error, attempts);
+            }
+        }
+
+        throw new RPCError(
+            RPC_ERRORS.MAX_RETRIES_EXCEEDED.code,
+            `Failed after ${MAX_ATTEMPTS} attempts`
+        );
+    }
+
+    private async sendTransaction(
+        wallet: any,
+        userOp: EntryPointUserOp,
+        gasLimit: bigint
+    ): Promise<Hash> {
+        return wallet.writeContract({
+            address: ENTRY_POINT_ADDRESS as `0x${string}`,
+            abi: ENTRY_POINT_ABI,
+            functionName: 'handleOps',
+            args: [[userOp], ENTRY_POINT_ADDRESS] as any,
+            chain: localChain,
+            account: wallet.account,
+            gas: gasLimit,
+            maxFeePerGas: MAX_FEE_PER_GAS,
+            maxPriorityFeePerGas: MAX_PRIORITY_FEE_PER_GAS
+        } as const);
+    }
+}
+
+export const sendHandleOps = TransactionService.getInstance().sendHandleOps.bind(TransactionService.getInstance()); 

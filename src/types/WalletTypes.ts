@@ -6,12 +6,12 @@ export type CustomWalletClient = WalletClient & {
 };
 
 export enum TransactionStatus {
-    PENDING = 'PENDING',
-    CONFIRMED = 'CONFIRMED',
-    FAILED = 'FAILED'
+    PENDING = 'pending',
+    CONFIRMED = 'confirmed',
+    FAILED = 'failed'
 }
 
-export interface Transaction {
+export interface TransactionInfo {
     hash: Hash;
     status: TransactionStatus;
     timestamp: number;
@@ -23,5 +23,12 @@ export interface WalletState {
     failureCount: number;
     lastUsed: number;
     currentNonce: bigint;
-    transactions: Map<Hash, Transaction>;
+    transactions: Map<Hash, TransactionInfo>;
+}
+
+export interface WalletScore {
+    address: string;
+    state: WalletState;
+    score: number;
+    balance: bigint;
 } 

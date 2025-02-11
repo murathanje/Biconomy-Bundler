@@ -17,7 +17,7 @@ A minimal implementation of an ERC-4337 bundler node that accepts and executes U
 - Node.js v16 or higher
 - Yarn or npm
 - Two EOA accounts with Sepolia ETH for gas fees
-- Access to Sepolia RPC endpoint
+- Access to Base Sepolia RPC endpoint
 
 ## Installation
 
@@ -43,7 +43,7 @@ Edit `.env` file with your configuration:
 PORT=3001
 
 # Network Configuration
-SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR-API-KEY
+RPC_URL=https://base-sepolia.g.alchemy.com/v2/<key>
 
 # EntryPoint Contract
 ENTRY_POINT_ADDRESS=0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789
@@ -51,6 +51,9 @@ ENTRY_POINT_ADDRESS=0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789
 # EOA Private Keys (Do not use these in production!)
 EOA1_PK=your_private_key_1_here
 EOA2_PK=your_private_key_2_here
+
+# Environment
+NODE_ENV=development
 ```
 
 ## Usage
@@ -82,7 +85,6 @@ curl -X POST http://localhost:3001 \
         "paymasterAndData": "0x",
         "signature": "0x..."
       },
-      "0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789"
     ]
   }'
 ```
